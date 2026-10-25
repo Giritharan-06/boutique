@@ -1,5 +1,7 @@
 'use client';
 
+import Brand from './brand';
+
 import {useEffect,useState} from 'react';
 import {ArrowLeft,ArrowRight,Check,Eye,EyeOff,Flower2,LockKeyhole,ShieldCheck,Sparkles} from 'lucide-react';
 
@@ -22,7 +24,7 @@ export default function AuthPage({role='customer'}:{role?:Role}) {
   }
   return <main className="auth-page">
     <section className="auth-story">
-      <a href="/" className="brand">AARINI<span>MADE FOR YOUR MOMENTS</span></a>
+      <Brand tagline="MADE FOR YOUR MOMENTS"/>
       <div className="auth-story-photo" aria-hidden="true"/>
       <div className="auth-story-copy"><span className="eyebrow"><Flower2 size={16}/> THE AARINI CIRCLE</span><h2>{admin?<>Your craft.<br/>Your little world.</>:<>A wardrobe of<br/><em>beautiful moments.</em></>}</h2><p>{admin?'A thoughtful space for your collection, your customers and everything you’re growing.':'Thoughtfully chosen styles. A personal fitting room. A little more you, in every detail.'}</p><div className="auth-story-note"><Sparkles size={17}/><span>{admin?'Made for the people behind the boutique.':'Indian roots. Your own expression.'}</span></div></div>
       <div className="auth-story-flower" aria-hidden="true"><Flower2 size={130} strokeWidth={.5}/></div>

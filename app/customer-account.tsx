@@ -1,5 +1,7 @@
 'use client';
 
+import Brand from './brand';
+
 import {useEffect,useState} from 'react';
 import {ArrowLeft,ArrowRight,Check,LogOut,Package,ShoppingBag,Sparkles,UserRound} from 'lucide-react';
 import type {Order} from './model';
@@ -15,7 +17,7 @@ export default function CustomerAccount(){
   function choose(value:string){setTab(value);setError('');setMessage('');window.history.replaceState({},'','/account?tab='+value);}
   async function credits(body:Record<string,unknown>){if(busy)return;setBusy(true);setError('');setMessage('');try{const response=await fetch('/api/credits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),result=await response.json() as {access:PreviewAccess;purchases:AiPurchase[];error?:string};if(!response.ok)throw Error(result.error||'Unable to update your credits.');setData(current=>current?{...current,access:result.access,purchases:result.purchases}:current);setMessage(body.action==='purchase'?'Your selection is saved. Complete payment with the boutique to activate it.':body.action==='endSubscription'?'Your plan will end on its expiry date.':'Your selection has been cancelled.');}catch(error){setError(error instanceof Error?error.message:'Please try again.');}finally{setBusy(false);}}
   async function cancelOrder(id:string){setBusy(true);setError('');try{const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'cancel',id})}),result=await response.json() as {order?:Order;error?:string};if(!response.ok||!result.order)throw Error(result.error||'Unable to cancel the order.');setOrders(current=>current.map(order=>order.id===id?result.order!:order));setCancelId('');setMessage('Your order has been cancelled.');}catch(error){setError(error instanceof Error?error.message:'Please try again.');}finally{setBusy(false);}}
-  return <main className="customer-account-page"><header className="account-header"><a href="/" className="brand">AARINI<span>MADE FOR YOUR MOMENTS</span></a><a href="/" className="text-link"><ArrowLeft size={15}/>Back to the boutique</a></header><div className="account-shell">
+  return <main className="customer-account-page"><header className="account-header"><Brand tagline="MADE FOR YOUR MOMENTS"/><a href="/" className="text-link"><ArrowLeft size={15}/>Back to the boutique</a></header><div className="account-shell">
     {!data?<div className="empty"><UserRound size={30}/><h2>{error?'Your account is waiting.':'Opening your account…'}</h2>{error&&<><p role="alert">{error}</p><button className="btn outline" onClick={()=>void load()}>Try again</button></>}</div>:<>
       <div className="account-welcome"><span className="account-avatar">{data.user.name.slice(0,2).toUpperCase()}</span><div><span className="eyebrow">YOUR AARINI CIRCLE</span><h1>Hello, {data.user.name.split(' ')[0]}.</h1><p>Your details, orders and little extras.</p></div></div>
       <nav className="account-tabs" aria-label="Your account">{[{id:'profile',name:'My profile',icon:UserRound},{id:'orders',name:'My orders',icon:ShoppingBag},{id:'credits',name:'AI credits & plans',icon:Sparkles}].map(item=><button key={item.id} aria-current={tab===item.id?'page':undefined} className={tab===item.id?'active':''} onClick={()=>choose(item.id)}><item.icon size={16}/>{item.name}</button>)}</nav>

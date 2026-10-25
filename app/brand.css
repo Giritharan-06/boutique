@@ -1,0 +1,17 @@
+.brand.brand-lockup {display:inline-flex;align-items:center;gap:12px;line-height:1.1;max-width:100%;vertical-align:middle}
+.brand-lockup>.brand-mark {display:block;width:44px;height:44px;flex:none}
+.brand.brand-lockup>.brand-wordmark {display:block;margin:0;font:inherit;letter-spacing:inherit;color:inherit}
+.brand-wordmark>.brand-tagline {display:block;margin-top:7px;font:500 6px/1.4 'DM Sans',sans-serif;letter-spacing:1.25px;color:inherit}
+.sidebar .brand-lockup {gap:10px}
+.sidebar .brand-lockup>.brand-mark {width:38px;height:38px}
+.auth-story .brand-lockup>.brand-mark {width:48px;height:48px}
+@media(max-width:600px){
+  .brand.brand-lockup {gap:8px}
+  .brand-lockup>.brand-mark {width:32px;height:32px}
+  .brand-wordmark>.brand-tagline {font-size:4.5px;letter-spacing:.5px;margin-top:5px}
+  .account-header .brand-lockup>.brand-mark {width:30px;height:30px}
+}
+@media(max-width:370px){
+  .store-header .brand-lockup {gap:6px;letter-spacing:3px;font-size:19px}
+  .store-header .brand-lockup>.brand-mark {width:28px;height:28px}
+}
