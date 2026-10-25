@@ -1,8 +1,39 @@
-import {readShop,updateShop} from '../../../lib/local/store';
-import {getAuthUser} from '../../../lib/local/auth';
-import {saveProductImages,removeProductImages} from '../../../lib/local/product-images';
-import {localRequest,boundedJson} from '../../../lib/local/security';
-export const dynamic='force-dynamic';
-const json=(v:unknown,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'no-store'}});
-export async function GET(req:Request){if(!localRequest(req))return json({error:'This boutique is available on localhost only.'},403);const user=getAuthUser(req,'admin');if(!user||user.role!=='admin')return json({error:'Admin sign-in is required.'},401);try{return json({...readShop(),user});}catch{return json({error:'Unable to open your local database.'},503);}}
-export async function POST(req:Request){if(!localRequest(req,true))return json({error:'Invalid local request.'},403);const user=getAuthUser(req,'admin');if(!user||user.role!=='admin')return json({error:'Admin sign-in is required.'},401);let created:string[]=[];let previous:string[]=[];try{const body=await boundedJson(req,12_000_000);let action=body.action as any;if(action?.type==='product'&&action.product&&Array.isArray(action.product.photos)&&action.product.photos.length){const before=readShop().shop.products.find(p=>p.id===action.product.id);previous=before?.images||[];created=await saveProductImages(action.product.photos);action={...action,product:{...action.product,images:created}};delete action.product.photos;}const result=updateShop(body.revision,action);if(!result){await removeProductImages(created);return json({error:'Another window updated the boutique. Refresh and try again.'},409);}if(created.length)await removeProductImages(previous);return json(result);}catch(e){await removeProductImages(created);return json({error:e instanceof Error?e.message:'Unable to save.'},400);}}
+import { readShop, updateShop } from '../../../lib/local/store';
+import { getAuthUser } from '../../../lib/local/auth';
+import { saveProductImages, removeProductImages } from '../../../lib/local/product-images';
+import { localRequest, boundedJson } from '../../../lib/local/security';
+export const dynamic = 'force-dynamic';
+const json = (v: unknown, status = 200) => Response.json(v, { status, headers: { 'Cache-Control': 'no-store' } });
+export async function GET(req: Request) { if (!localRequest(req))
+    return json({ error: 'This boutique is available on localhost only.' }, 403); const user = (await getAuthUser(req, 'admin')); if (!user || user.role !== 'admin')
+    return json({ error: 'Admin sign-in is required.' }, 401); try {
+    return json({ ...(await readShop()), user });
+}
+catch {
+    return json({ error: 'Unable to open your database.' }, 503);
+} }
+export async function POST(req: Request) { if (!localRequest(req, true))
+    return json({ error: 'Invalid local request.' }, 403); const user = (await getAuthUser(req, 'admin')); if (!user || user.role !== 'admin')
+    return json({ error: 'Admin sign-in is required.' }, 401); let created: string[] = []; let previous: string[] = []; try {
+    const body = await boundedJson(req, 12000000);
+    let action = body.action as any;
+    if (action?.type === 'product' && action.product && Array.isArray(action.product.photos) && action.product.photos.length) {
+        const before = (await readShop()).shop.products.find(p => p.id === action.product.id);
+        previous = before?.images || [];
+        created = await saveProductImages(action.product.photos);
+        action = { ...action, product: { ...action.product, images: created } };
+        delete action.product.photos;
+    }
+    const result = (await updateShop(body.revision, action));
+    if (!result) {
+        await removeProductImages(created);
+        return json({ error: 'Another window updated the boutique. Refresh and try again.' }, 409);
+    }
+    if (created.length)
+        await removeProductImages(previous);
+    return json(result);
+}
+catch (e) {
+    await removeProductImages(created);
+    return json({ error: e instanceof Error ? e.message : 'Unable to save.' }, 400);
+} }

@@ -9,11 +9,17 @@ Double-click START-LOCAL.cmd, or run npm run dev from this folder.
 
 Node.js 24 is used. Run npm install if dependencies are missing. No ChatGPT login, Python, CUDA, local AI model or paid API key is needed. Keep the terminal running while using the app; Ctrl+C stops it. The server binds only to 127.0.0.1.
 
-## Local data
+## Database
 
-Products, customer profiles, orders, appointments, accounts, AI allowances, plans and sessions are saved in .local/boutique.sqlite. Uploaded product photos are stored under .local/product-images. Existing local development records from the earlier D1 preview are imported once, if present. Bag and wishlist are device-local browser preferences. Back up the .local directory while the app is stopped. This directory is excluded from Git.
+Copy .env.example to .env.local and set DATABASE_URL to your PostgreSQL connection string. The launcher loads it on startup. The connection is server-only, pooled and encrypted with certificate verification and channel binding enabled. Never put it in a NEXT_PUBLIC_ or VITE_ variable or commit it to Git.
 
-Order prices and stock are calculated server-side. Updates use SQLite transactions and revision checks. Requests with unexpected hosts or origins are rejected. The CRM at /crm has local admin sign-in and first-time account creation. Customers can create an account on the storefront, manage their profile and view their own orders at /account. Passwords are stored as scrypt hashes; admin and customer sessions use separate HttpOnly cookies. Existing localhost accounts and passwords are not included in this repository. This local workspace is not intended to be exposed to the internet.
+With DATABASE_URL configured, products, customer profiles, orders, appointments, accounts, sessions, AI allowances, plans and uploaded product photos are saved in the PostgreSQL aarini schema. Other schemas are untouched. A connection failure does not silently switch to a separate local database.
+
+- npm run db:check verifies TLS and table counts without printing connection details.
+- npm run db:migrate copies the existing .local/boutique.sqlite data and uploaded photos into an empty aarini schema. Stop the app first. It refuses to overwrite existing remote records and leaves the SQLite source unchanged as a backup.
+- Without DATABASE_URL, the app uses .local/boutique.sqlite and .local/product-images for offline development. Back up .local while the app is stopped. Both .local and .env.local are excluded from Git. Restart after changing the database configuration.
+
+Bag and wishlist are device-local browser preferences. AI photos and results are temporary; they are not saved to PostgreSQL. Order prices and stock are calculated server-side. Updates use transactions, revision checks and a database lock for shared writes. Requests with unexpected hosts or origins are rejected. The CRM at /crm has admin sign-in and first-time account creation. Customers can create an account on the storefront, manage their profile and view their own orders at /account. Passwords are stored as scrypt hashes; admin and customer sessions use separate HttpOnly cookies. Existing accounts and passwords are not included in this repository. This workspace is not intended to be exposed to the internet.
 
 ## Shopping and CRM
 
@@ -39,7 +45,7 @@ The core FASHN model is Apache-2.0, but its bundled human parser inherits the NV
 - https://github.com/fashn-AI/fashn-human-parser/blob/main/LICENSE
 - https://github.com/NVlabs/SegFormer/blob/master/LICENSE
 
-Four AI-generated sample photos are supplied for each collection. CRM product forms accept up to four JPG, PNG or WebP photos per style; uploads are resized and saved locally. When present, the first uploaded garment photo is used by AI try-on after explicit consent. Replace the shared collection samples with each item’s real images and measurements before launch. AI preview illustrates appearance, not measured fit.
+Four AI-generated sample photos are supplied for each collection. CRM product forms accept up to four JPG, PNG or WebP photos per style; uploads are resized and saved to the configured database (local files in offline mode). When present, the first uploaded garment photo is used by AI try-on after explicit consent. Replace the shared collection samples with each item’s real images and measurements before launch. AI preview illustrates appearance, not measured fit.
 
 ## Checks
 
@@ -48,11 +54,18 @@ Four AI-generated sample photos are supplied for each collection. CRM product fo
 - npm run build
 - npm run test:crm (temporary local API fixtures, cleaned up after the run)
 - npm run test:commerce (temporary profile, order, credit and plan checks)
+- npm run test:postgres (concurrent credit reservations and activation checks, using disposable accounts in the configured PostgreSQL database)
 - node scripts/verify-local.mjs (local API and hosted connectivity)
 - node scripts/verify-local.mjs --generate (sends only synthetic catalogue images to the hosted model and saves an actual result if the free demo is available)
 
 ## Hosting
 
-The source repository is https://github.com/Giritharan-06/boutique. Pushing source does not deploy or host this application. Run it on localhost; do not register a new Site or push to the old hosting remote. .openai/hosting.json retains the old project ID as historical metadata, not active configuration. The earlier private ChatGPT-hosted deployment is separate; stopping localhost does not remove that old deployment.
+### Vercel build configuration
+
+The production command is `npm run build` (`next build --webpack`), which creates the native Next.js `.next` output and routes manifest expected by Vercel. The checked-in `vercel.json` sets the Next.js framework, build command and output directory. Node.js is pinned to 24.x. `npm start` runs the native Next.js production server locally after building; development still uses the existing Vinext launcher.
+
+Run `npm run test:production` to check the built pages, PostgreSQL catalogue and protected CRM endpoint on temporary localhost port 5174. Configure `DATABASE_URL` separately in Vercel's server environment; the local secret file is excluded from Git. The API currently enforces localhost access. Configuring a hosted origin and reviewing hosted execution are separate from correcting the build output.
+
+The source repository is https://github.com/Giritharan-06/boutique. A Vercel Git integration can build and deploy pushes to its configured branches. The local launcher binds to localhost. Do not register a new ChatGPT Site or push to the old hosting remote. .openai/hosting.json retains the old project ID as historical metadata, not active configuration. The earlier private ChatGPT-hosted deployment is separate; stopping localhost does not remove that old deployment.
 
 Online payments, carrier integration, email notifications, password recovery and multi-staff roles are not configured. Clothing orders are recorded as unpaid cash-on-delivery orders. Recording a payment or activating AI credits in the CRM does not collect money.
