@@ -1,2 +1,1 @@
-TRYON_API_URL=
-TRYON_API_KEY=
+# Not used by the localhost app. No AI API key is required.

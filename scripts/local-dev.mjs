@@ -1,0 +1,15 @@
+import {spawn} from 'node:child_process';
+import {existsSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+process.chdir(root);
+if(existsSync('.env.local'))process.loadEnvFile('.env.local');
+const mode=process.argv.includes('--production')?'start':'dev';
+console.log('Aarini runs only on this computer. AI requests use the hosted Hugging Face demo.');
+console.log('Storefront: http://127.0.0.1:5173/');
+console.log('CRM:        http://127.0.0.1:5173/crm');
+const child=spawn(process.execPath,['node_modules/vinext/dist/cli.js',mode,'--hostname','127.0.0.1','--port','5173'],{cwd:root,stdio:'inherit',windowsHide:true});
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>child.kill(signal));
+child.once('exit',code=>process.exit(code??0));
+child.once('error',error=>{console.error(error.message);process.exit(1);});

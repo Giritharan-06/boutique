@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./presentation.css";
+import "./scroll-motion.css";
+import "./store-updates.css";
+import "./customer-commerce.css";
 
 export const metadata: Metadata = {
   title: "Aarini — Made for your moments",

@@ -1,5 +1,5 @@
 {
-  "d1": "DB",
-  "r2": null,
-  "project_id": "appgprj_6addab481d848191877a72fa28c2867d"
+  "local_only": true,
+  "previous_project_id": "appgprj_6addab481d848191877a72fa28c2867d",
+  "note": "Localhost application. Source may be pushed to the user-authorized GitHub repository; do not deploy to the previous Site or register a new Site."
 }

@@ -1,18 +1,8 @@
-import {env} from 'cloudflare:workers';
-import {getChatGPTUser} from '../../chatgpt-auth';
-import {initialShop,reduceShop} from '../../model';
+import {readShop,updateShop} from '../../../lib/local/store';
+import {getAuthUser} from '../../../lib/local/auth';
+import {saveProductImages,removeProductImages} from '../../../lib/local/product-images';
+import {localRequest,boundedJson} from '../../../lib/local/security';
 export const dynamic='force-dynamic';
-const json=(v:any,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'no-store'}});
-export async function GET(){const u=await getChatGPTUser();if(!u)return json({error:'Sign in to save and manage your boutique.',signIn:true},401);try{const r=await env.DB!.prepare('SELECT data,revision FROM shops WHERE owner = ?').bind(u.userId).first<{data:string;revision:number}>();return json({shop:r?JSON.parse(r.data):initialShop,revision:r?.revision??0,user:u.displayName});}catch{return json({error:'The database is not available yet. Please try again shortly.'},503);}}
-export async function POST(req:Request){
- const u=await getChatGPTUser();if(!u)return json({error:'Please sign in before saving.',signIn:true},401);
- if(req.headers.get('origin')!==new URL(req.url).origin)return json({error:'Invalid request origin.'},403);
- try{const raw=await req.text();if(raw.length>100000)return json({error:'Request too large.'},413);const b=JSON.parse(raw),db=env.DB!;
- await db.prepare('INSERT OR IGNORE INTO shops (owner,data,revision) VALUES (?,?,0)').bind(u.userId,JSON.stringify(initialShop)).run();
- const r=await db.prepare('SELECT data,revision FROM shops WHERE owner = ?').bind(u.userId).first<{data:string;revision:number}>();
- if(!r||r.revision!==b.revision)return json({error:'Your boutique changed in another window. Refresh and try again.'},409);
- const shop=reduceShop(JSON.parse(r.data),b.action);
- const result=await db.prepare('UPDATE shops SET data = ?,revision = revision + 1 WHERE owner = ? AND revision = ?').bind(JSON.stringify(shop),u.userId,b.revision).run();
- if(result.meta.changes!==1)return json({error:'Another update arrived. Refresh and try again.'},409);
- return json({shop,revision:r.revision+1});
- }catch(e){return json({error:e instanceof Error?e.message:'Unable to save.'},400);}}
+const json=(v:unknown,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'no-store'}});
+export async function GET(req:Request){if(!localRequest(req))return json({error:'This boutique is available on localhost only.'},403);const user=getAuthUser(req,'admin');if(!user||user.role!=='admin')return json({error:'Admin sign-in is required.'},401);try{return json({...readShop(),user});}catch{return json({error:'Unable to open your local database.'},503);}}
+export async function POST(req:Request){if(!localRequest(req,true))return json({error:'Invalid local request.'},403);const user=getAuthUser(req,'admin');if(!user||user.role!=='admin')return json({error:'Admin sign-in is required.'},401);let created:string[]=[];let previous:string[]=[];try{const body=await boundedJson(req,12_000_000);let action=body.action as any;if(action?.type==='product'&&action.product&&Array.isArray(action.product.photos)&&action.product.photos.length){const before=readShop().shop.products.find(p=>p.id===action.product.id);previous=before?.images||[];created=await saveProductImages(action.product.photos);action={...action,product:{...action.product,images:created}};delete action.product.photos;}const result=updateShop(body.revision,action);if(!result){await removeProductImages(created);return json({error:'Another window updated the boutique. Refresh and try again.'},409);}if(created.length)await removeProductImages(previous);return json(result);}catch(e){await removeProductImages(created);return json({error:e instanceof Error?e.message:'Unable to save.'},400);}}

@@ -1,2 +1,3 @@
 import Boutique from './boutique';
-export default function Page(){return <Boutique/>;}
+import StorefrontMotion from './storefront-motion';
+export default function Page(){return <><StorefrontMotion/><Boutique/></>;}

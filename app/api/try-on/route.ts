@@ -1,18 +1,9 @@
-import {env} from 'cloudflare:workers';
-import {getChatGPTUser} from '../../chatgpt-auth';
-import {initialShop} from '../../model';
+import {providerStatus,createJob,friendlyError} from '../../../lib/local/try-on';
+import {readShop} from '../../../lib/local/store';
+import {localRequest,boundedJson} from '../../../lib/local/security';
+import {getAuthUser} from '../../../lib/local/auth';
+import {reservePreview,settlePreview,readPreviewAccess,PreviewLimitError} from '../../../lib/local/commerce';
+import {randomUUID} from 'node:crypto';
 export const dynamic='force-dynamic';
-const vars=()=>env as unknown as Record<string,any>;
-export async function GET(){return Response.json({connected:Boolean(vars().TRYON_API_URL&&vars().TRYON_API_KEY)},{headers:{'Cache-Control':'no-store'}});}
-export async function POST(req:Request){
- const u=await getChatGPTUser();if(!u)return Response.json({error:'Sign in to generate a preview.'},{status:401});
- if(req.headers.get('origin')!==new URL(req.url).origin)return Response.json({error:'Invalid origin.'},{status:403});
- if(!vars().TRYON_API_URL||!vars().TRYON_API_KEY)return Response.json({error:'AI generation is not connected yet. Your photo stays in this browser. You can still compare outfits below.'},{status:503});
- try{const raw=await req.text();if(raw.length>7100000)return Response.json({error:'Choose a photo under 5 MB.'},{status:413});const b=JSON.parse(raw);
- if(b.consent!==true||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(b.photo)||!['S','M','L','XL'].includes(b.size))return Response.json({error:'Choose a JPG, PNG or WebP photo and allow processing.'},{status:400});
- const row=await env.DB!.prepare('SELECT data FROM shops WHERE owner = ?').bind(u.userId).first<{data:string}>();const garment=(row?JSON.parse(row.data):initialShop).products.find((p:any)=>p.id===b.product);
- if(!garment)return Response.json({error:'Outfit not found.'},{status:400});
- const upstream=await fetch(vars().TRYON_API_URL,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+vars().TRYON_API_KEY},body:JSON.stringify({photo:b.photo,garment:{...garment,image:new URL('/campaign.png',req.url).href},size:b.size}),signal:AbortSignal.timeout(60000)});
- if(!upstream.ok)throw Error('Preview service unavailable.');const r:any=await upstream.json();if(typeof r.imageUrl!=='string'||!/^(https:\/\/|data:image\/(png|jpeg|webp);base64,)/.test(r.imageUrl))throw Error('Invalid preview.');
- return Response.json({imageUrl:r.imageUrl},{headers:{'Cache-Control':'no-store'}});
- }catch{return Response.json({error:'Unable to generate the preview. Please try again shortly.'},{status:502});}}
+export async function GET(req:Request){if(!localRequest(req))return Response.json({error:'Local access only.'},{status:403});return Response.json({connected:(await providerStatus()).connected},{headers:{'Cache-Control':'no-store'}});}
+export async function POST(req:Request){if(!localRequest(req,true))return Response.json({error:'Invalid request.'},{status:403});let user=getAuthUser(req,'customer')||getAuthUser(req,'admin');if(!user)return Response.json({error:'Please sign in to create a preview.'},{status:401});const id=randomUUID();let reserved=false;try{const body=await boundedJson(req,7100000);if(body.studio===true){const admin=getAuthUser(req,'admin');if(!admin)throw Error('Please sign in to the studio.');user=admin;}if(body.consent!==true)throw Error('Allow your photo to be processed for this preview first.');if(typeof body.photo!=='string'||!['S','M','L','XL'].includes(body.size))throw Error('Choose a photo and size.');const product=readShop().shop.products.find(product=>product.id===body.product&&!product.archived);if(!product)throw Error('Outfit not found.');if(user.role==='customer'){reservePreview(user.id,id);reserved=true;}return Response.json(await createJob(body.photo,product.imageSet,product.imageIndex,product.images?.[product.imageIndex]||product.images?.[0],{id,accountId:user.id,billable:reserved}),{status:202,headers:{'Cache-Control':'no-store'}});}catch(error){if(reserved)settlePreview(id,false);const limited=error instanceof PreviewLimitError;return Response.json({error:limited?'Limit reached':friendlyError(error),code:limited?'LIMIT_REACHED':undefined,access:user.role==='customer'?readPreviewAccess(user.id):undefined},{status:limited?429:400});}}
