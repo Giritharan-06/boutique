@@ -1,6 +1,7 @@
 'use client';
 
 import Brand from './brand';
+import './password-recovery.css';
 
 import {useEffect,useState} from 'react';
 import {ArrowLeft,ArrowRight,Check,Eye,EyeOff,Flower2,LockKeyhole,ShieldCheck,Sparkles} from 'lucide-react';
@@ -42,6 +43,7 @@ export default function AuthPage({role='customer'}:{role?:Role}) {
           <label htmlFor="auth-email">Email address</label><input id="auth-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={254}/>
           <label htmlFor="auth-password">Password</label><div className="password-input"><input id="auth-password" name="password" type={showPassword?'text':'password'} autoComplete={mode==='signup'?'new-password':'current-password'} placeholder="Enter your password" required minLength={10} maxLength={128}/><button type="button" aria-label={showPassword?'Hide password':'Show password'} onClick={()=>setShowPassword(value=>!value)}>{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button></div>
           {mode==='signup'&&<><label htmlFor="auth-confirm">Confirm password</label><input id="auth-confirm" name="confirmPassword" type="password" autoComplete="new-password" minLength={10} maxLength={128} required/><p className="auth-password-note"><Check size={12}/> Use at least 10 characters.</p></>}
+          <a className="text-link auth-forgot-password" href={'/forgot-password?role='+role}>Forgot password?</a>
           {error&&<p className="error" role="alert">{error}</p>}
           <button className="btn full" disabled={busy}>{busy?'Please wait…':mode==='signup'?'Create my account':admin?'Open my studio':'Sign in'}<ArrowRight size={16}/></button>
         </form>

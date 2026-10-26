@@ -19,7 +19,9 @@
     "test:commerce": "node scripts/verify-commerce.mjs",
     "test:postgres": "node scripts/verify-postgres.mjs",
     "test:production": "node scripts/verify-production.mjs",
-    "test:hosted-auth": "node scripts/verify-hosted-auth.mjs"
+    "test:hosted-auth": "node scripts/verify-hosted-auth.mjs",
+    "test:fabric-access": "node scripts/verify-fabric-trial.mjs",
+    "test:fashion-access": "node scripts/verify-fashion-access.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

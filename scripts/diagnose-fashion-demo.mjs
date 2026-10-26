@@ -1,0 +1,7 @@
+import {fashionRuntime} from './fashion-runtime.mjs';
+const load=await fashionRuntime(),database=await load('database');
+try{let job;const id=process.argv[2];if(id){const db=await database.openDatabase();try{const row=await db.prepare('SELECT data FROM "aarini_fashion_studio"."jobs" WHERE id=?').get(id);job=row?JSON.parse(row.data):null;}finally{db.close();}}
+  if(job?.remote)try{const r=await fetch(`https://qwen-qwen-image-edit.hf.space/gradio_api/call/infer/${job.remote.event}`,{signal:AbortSignal.timeout(5000)});console.log('Previous Qwen event:',r.status,(await r.text()).replace(/https?:\/\/\S+/g,'[address]').slice(0,2000));}catch{console.log('Previous event is no longer replayable.');}
+  const r=await fetch('https://huggingface.co/api/spaces/Qwen/Qwen-Image-Edit-2511',{signal:AbortSignal.timeout(20000)}),s=await r.json();console.log('Official newer Space:',s.runtime?.stage,s.host);
+  if(s.host){const response=await fetch(new URL('/gradio_api/info',s.host),{signal:AbortSignal.timeout(20000)});const info=await response.json();for(const [key,value] of Object.entries(info.named_endpoints||{}))console.log(JSON.stringify({endpoint:key,parameters:value.parameters?.map(p=>({name:p.parameter_name,default:p.parameter_default,required:!p.parameter_has_default})),imageSchema:value.parameters?.[0]?.type,returns:value.returns?.map(r=>r.label)}));}
+}finally{await database.closeDatabasePool();}

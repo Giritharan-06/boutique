@@ -1,0 +1,15 @@
+import {test,after} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,writeFileSync,mkdtempSync,mkdirSync,rmSync} from 'node:fs';
+import {join,resolve,sep} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import ts from 'typescript';
+const parent=resolve('.local');mkdirSync(parent,{recursive:true});const root=mkdtempSync(join(parent,'fabric-unit-'));
+for(const name of ['templates','images']){const source=readFileSync('app/fabric-trial/'+name+'.ts','utf8').replace("'./templates'","'./templates.mjs'");writeFileSync(join(root,name+'.mjs'),ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText);}
+const templates=await import(pathToFileURL(join(root,'templates.mjs')).href),images=await import(pathToFileURL(join(root,'images.mjs')).href);
+after(()=>{assert.ok(root.startsWith(parent+sep)&&root.includes('fabric-unit-'));rmSync(root,{recursive:true,force:true});});
+test('the four blouse designs have distinct transparent masks aligned to one model',()=>{assert.equal(templates.blouseTemplates.length,4);assert.equal(new Set(templates.blouseTemplates.map(item=>item.path)).size,4);for(const template of templates.blouseTemplates){const mask=readFileSync('public'+template.maskUrl,'utf8');assert.ok(mask.includes('viewBox="0 0 768 1024"'));assert.ok(mask.includes(template.path));assert.ok(!mask.includes('<rect'));assert.ok(readFileSync('public'+template.thumbnailUrl,'utf8').includes(template.path));}});
+test('the initial reference is explicitly a placeholder with a protected face region',()=>{assert.equal(templates.referenceModel.placeholder,true);assert.equal(templates.referenceModel.protectedTop,270);const model=readFileSync('public'+templates.referenceModel.url,'utf8');assert.ok(model.includes('ILLUSTRATED REFERENCE'));assert.ok(model.includes('not an AI-generated fit'));});
+test('fabric cropping is normalized and cannot leave the source image',()=>{for(const input of [{x:-2,y:4,width:2,height:-3},{x:.9,y:.9,width:.5,height:.7},{x:NaN,y:Infinity,width:NaN,height:Infinity}]){const crop=templates.clampCrop(input);assert.ok(crop.x>=0&&crop.y>=0&&crop.width>=.05&&crop.height>=.05);assert.ok(crop.x+crop.width<=1&&crop.y+crop.height<=1);}});
+test('fabric transformations reject non-finite and out-of-range values',()=>{assert.deepEqual(templates.clampTexture({scale:NaN,rotation:500,x:-999,y:Infinity,repeat:true}),{scale:1,rotation:180,x:-200,y:0,repeat:true});assert.deepEqual(templates.clampAlignment({scale:4,rotation:-100,x:100,y:-999}),{scale:1.15,rotation:-8,x:60,y:-40});});
+test('fabric upload accepts existing JPG PNG and WebP limits',()=>{for(const type of images.fabricMimeTypes)assert.doesNotThrow(()=>images.validateFabricFile({type,size:1024}));assert.throws(()=>images.validateFabricFile({type:'image/svg+xml',size:100}),/JPG/);assert.throws(()=>images.validateFabricFile({type:'image/png',size:0}),/empty/);assert.throws(()=>images.validateFabricFile({type:'image/jpeg',size:5*1024*1024+1}),/5 MB/);});

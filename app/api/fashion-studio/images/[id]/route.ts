@@ -1,0 +1,5 @@
+import {guard,studioJson,studioError} from '../../../../../lib/fashion-studio/http';
+import {readAsset,deleteAsset} from '../../../../../lib/fashion-studio/store';
+export const dynamic='force-dynamic';
+export async function GET(req:Request,ctx:{params:Promise<{id:string}>}){try{const user=await guard(req),{id}=await ctx.params,image=await readAsset(id,user.id);if(!image)return studioJson({error:'Image expired or not found.'},404);return new Response(new Uint8Array(image.bytes),{headers:{'Content-Type':'image/png','Content-Disposition':new URL(req.url).searchParams.has('download')?'attachment; filename="aarini-studio-preview.png"':'inline','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});}catch(e){return studioError(e);}}
+export async function DELETE(req:Request,ctx:{params:Promise<{id:string}>}){try{const user=await guard(req,true),{id}=await ctx.params;await deleteAsset(id,user.id);return studioJson({ok:true});}catch(e){return studioError(e);}}

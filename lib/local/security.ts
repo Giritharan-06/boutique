@@ -11,6 +11,12 @@ export function appRequest(request:Request,write=false){
   const url=new URL(request.url),allowed=deploymentOrigins(),local=localHosts.has(url.hostname);
   let expectedOrigin=url.origin;
   if(!local&&!allowed.has(expectedOrigin))return false;
+  // Next may normalize a loopback request URL to localhost even when the
+  // browser uses 127.0.0.1. Accept only a loopback Host on the same port.
+  if(local){
+    const host=request.headers.get('host');
+    if(host)try{const browserUrl=new URL(url.protocol+'//'+host);if(localHosts.has(browserUrl.hostname)&&browserUrl.port===url.port)expectedOrigin=browserUrl.origin;}catch{}
+  }
   // A managed reverse proxy can pass an internal localhost URL to Next.js.
   // Only use its forwarded host when it matches a configured deployment origin.
   if(local&&hostedDeployment()){

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024" fill="none">
+ <rect width="768" height="1024" fill="#f6eee5"/>
+ <path d="M130 880V300a254 254 0 0 1 508 0v580" stroke="#e4d4c3" stroke-width="2"/>
+ <ellipse cx="384" cy="929" rx="132" ry="14" fill="#e4d4c3"/>
+ <path d="M307 163C307 59 461 59 461 163v100l-28 38h-98l-28-38Z" fill="#382b2c"/>
+ <path d="m351 229-5 51-57 25 35 78h120l35-78-57-25-5-51Z" fill="#bd8f79"/>
+ <path d="M332 149q7-57 52-57t52 57v41c0 37-24 68-52 68s-52-31-52-68Z" fill="#d4a68c"/>
+ <path d="M322 163q-5-74 62-77c50 0 69 39 62 83-28-6-56-28-69-48-11 22-31 36-55 42Z" fill="#382b2c"/>
+ <path d="M350 177h11m46 0h11" stroke="#60463e" stroke-width="3" stroke-linecap="round"/>
+ <path d="m382 184-3 14h8m-17 17q14 8 28 0" stroke="#94634f" stroke-width="2" stroke-linecap="round"/>
+ <circle cx="326" cy="188" r="6" fill="#d4a68c"/><circle cx="442" cy="188" r="6" fill="#d4a68c"/>
+ <path d="M289 305c-32 9-42 35-51 80l-34 183-19 69q-1 17 12 23c12 3 19-7 21-19l14-66 58-168Z" fill="#d4a68c"/>
+ <path d="M479 305c32 9 42 35 51 80l34 183 19 69q1 17-12 23c-12 3-19-7-21-19l-14-66-58-168Z" fill="#d4a68c"/>
+ <path d="m301 548-14 109 29 223-7 34q-3 13 13 14h25q12 0 13-13l-4-38 17-195h22l17 195-4 38q1 13 13 13h25q16-1 13-14l-7-34 29-223-14-109Z" fill="#d4a68c"/>
+ <path d="M288 307q27-14 51-21 45 42 90 0 24 7 51 21l-12 128-3 115q29 67 15 113-96 22-192 0-14-46 15-113l-3-115Z" fill="#ddd3ca" stroke="#c5b4a6" stroke-width="2"/>
+ <path d="M303 538q81 23 162 0M384 576v87" stroke="#c5b4a6" stroke-width="2"/>
+ <path d="M328 913h24m64 0h24" stroke="#f8f2ea" stroke-width="5" stroke-linecap="round"/>
+ <text x="384" y="973" text-anchor="middle" fill="#846f60" font-family="Arial,sans-serif" font-size="11" letter-spacing="1.4">ILLUSTRATED REFERENCE · FABRIC OVERLAY PROTOTYPE</text>
+ <text x="384" y="994" text-anchor="middle" fill="#a18c7c" font-family="Arial,sans-serif" font-size="10">Appearance study only · not an AI-generated fit or tailoring measurement</text>
+</svg>
