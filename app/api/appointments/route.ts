@@ -1,10 +1,10 @@
 import { getAuthUser } from '../../../lib/local/auth';
 import { readShop, updateShop } from '../../../lib/local/store';
-import { boundedJson, localRequest } from '../../../lib/local/security';
+import { boundedJson, appRequest } from '../../../lib/local/security';
 export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
-    if (!localRequest(req, true))
-        return Response.json({ error: 'Invalid local request.' }, { status: 403 });
+    if (!appRequest(req, true))
+        return Response.json({ error: 'Invalid request origin.' }, { status: 403 });
     const user = (await getAuthUser(req, 'customer')) || (await getAuthUser(req, 'admin'));
     if (!user)
         return Response.json({ error: 'Sign in before requesting a fitting.' }, { status: 401 });

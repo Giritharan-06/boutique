@@ -1,16 +1,16 @@
 import { getAuthUser } from '../../../lib/local/auth';
 import { readShop, updateShop } from '../../../lib/local/store';
-import { localRequest, boundedJson } from '../../../lib/local/security';
+import { appRequest, boundedJson } from '../../../lib/local/security';
 import { readCommerceSettings } from '../../../lib/local/commerce';
 import { deliveryCharge, ownsOrder } from '../../commerce-model';
 import { randomUUID } from 'node:crypto';
 export const dynamic = 'force-dynamic';
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
-export async function GET(req: Request) { if (!localRequest(req))
-    return json({ error: 'Local access only.' }, 403); const user = (await getAuthUser(req, 'customer')); if (!user)
+export async function GET(req: Request) { if (!appRequest(req))
+    return json({ error: 'Request origin is not allowed.' }, 403); const user = (await getAuthUser(req, 'customer')); if (!user)
     return json({ error: 'Please sign in to view your orders.' }, 401); return json({ orders: (await readShop()).shop.orders.filter(order => ownsOrder(order, user)).sort((a, b) => b.date.localeCompare(a.date)), canCancel: (await readCommerceSettings()).settings.customerCancellation }); }
 export async function POST(req: Request) {
-    if (!localRequest(req, true))
+    if (!appRequest(req, true))
         return json({ error: 'Invalid request.' }, 403);
     const user = (await getAuthUser(req, 'customer'));
     if (!user)

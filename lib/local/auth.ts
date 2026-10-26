@@ -17,8 +17,8 @@ function sessionToken(req: Request, role: 'admin' | 'customer') { const value = 
     if (key === cookieName(role))
         return decodeURIComponent(rest.join('='));
 } return ''; }
-export function sessionCookie(token: string, role: 'admin' | 'customer') { return cookieName(role) + '=' + encodeURIComponent(token) + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + (SESSION_MS / 1000); }
-export function clearSessionCookie(role: 'admin' | 'customer') { return cookieName(role) + '=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'; }
+export function sessionCookie(token: string, role: 'admin' | 'customer',secure=false) { return cookieName(role) + '=' + encodeURIComponent(token) + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + (SESSION_MS / 1000)+(secure?'; Secure':''); }
+export function clearSessionCookie(role: 'admin' | 'customer',secure=false) { return cookieName(role) + '=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'+(secure?'; Secure':''); }
 async function newSession(accountId: string,d:Database) { const token = randomBytes(32).toString('base64url');
     (await d.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now()));
     (await d.prepare('INSERT INTO sessions(token_hash,account_id,expires_at) VALUES(?,?,?)').run(digest(token), accountId, Date.now() + SESSION_MS));

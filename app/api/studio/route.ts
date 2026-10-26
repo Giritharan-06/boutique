@@ -1,19 +1,19 @@
 import { readShop, updateShop } from '../../../lib/local/store';
 import { getAuthUser } from '../../../lib/local/auth';
 import { saveProductImages, removeProductImages } from '../../../lib/local/product-images';
-import { localRequest, boundedJson } from '../../../lib/local/security';
+import { appRequest, boundedJson } from '../../../lib/local/security';
 export const dynamic = 'force-dynamic';
 const json = (v: unknown, status = 200) => Response.json(v, { status, headers: { 'Cache-Control': 'no-store' } });
-export async function GET(req: Request) { if (!localRequest(req))
-    return json({ error: 'This boutique is available on localhost only.' }, 403); const user = (await getAuthUser(req, 'admin')); if (!user || user.role !== 'admin')
+export async function GET(req: Request) { if (!appRequest(req))
+    return json({ error: 'Request origin is not allowed.' }, 403); const user = (await getAuthUser(req, 'admin')); if (!user || user.role !== 'admin')
     return json({ error: 'Admin sign-in is required.' }, 401); try {
     return json({ ...(await readShop()), user });
 }
 catch {
     return json({ error: 'Unable to open your database.' }, 503);
 } }
-export async function POST(req: Request) { if (!localRequest(req, true))
-    return json({ error: 'Invalid local request.' }, 403); const user = (await getAuthUser(req, 'admin')); if (!user || user.role !== 'admin')
+export async function POST(req: Request) { if (!appRequest(req, true))
+    return json({ error: 'Invalid request origin.' }, 403); const user = (await getAuthUser(req, 'admin')); if (!user || user.role !== 'admin')
     return json({ error: 'Admin sign-in is required.' }, 401); let created: string[] = []; let previous: string[] = []; try {
     const body = await boundedJson(req, 12000000);
     let action = body.action as any;

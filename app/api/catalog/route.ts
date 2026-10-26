@@ -1,8 +1,8 @@
 import { readShop } from '../../../lib/local/store';
-import { localRequest } from '../../../lib/local/security';
+import { appRequest } from '../../../lib/local/security';
 export const dynamic = 'force-dynamic';
-export async function GET(req: Request) { if (!localRequest(req))
-    return Response.json({ error: 'Local access only.' }, { status: 403 }); try {
+export async function GET(req: Request) { if (!appRequest(req))
+    return Response.json({ error: 'Request origin is not allowed.' }, { status: 403 }); try {
     return Response.json({ products: (await readShop()).shop.products.filter(product => !product.archived) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 catch {

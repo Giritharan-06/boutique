@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   description: "Thoughtful Indian womenswear, a virtual fitting room, and your boutique studio.",
   icons: {
     icon: [
-      {url:"/favicon.svg?v=aarini-1",type:"image/svg+xml",sizes:"any"},
-      {url:"/favicon-32.png",type:"image/png",sizes:"32x32"},
+      {url:"/favicon.svg?v=aarini-2",type:"image/svg+xml",sizes:"any"},
+      {url:"/favicon-32.png?v=aarini-2",type:"image/png",sizes:"32x32"},
     ],
-    shortcut: "/favicon.svg?v=aarini-1",
-    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.svg?v=aarini-2",
+    apple: "/apple-touch-icon.png?v=aarini-2",
   },
 };
 

@@ -1,12 +1,12 @@
 import { getAuthUser } from '../../../lib/local/auth';
 import { createAiPurchase, endSubscription, listAiPurchases, manageAiPurchase, readCommerceSettings, readPreviewAccess, PreviewLimitError } from '../../../lib/local/commerce';
-import { boundedJson, localRequest } from '../../../lib/local/security';
+import { boundedJson, appRequest } from '../../../lib/local/security';
 export const dynamic = 'force-dynamic';
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
-export async function GET(req: Request) { if (!localRequest(req))
-    return json({ error: 'Local access only.' }, 403); const user = (await getAuthUser(req, 'customer')); if (!user)
+export async function GET(req: Request) { if (!appRequest(req))
+    return json({ error: 'Request origin is not allowed.' }, 403); const user = (await getAuthUser(req, 'customer')); if (!user)
     return json({ error: 'Please sign in.' }, 401); return json({ access: (await readPreviewAccess(user.id)), settings: (await readCommerceSettings()).settings, purchases: (await listAiPurchases(user.id)) }); }
-export async function POST(req: Request) { if (!localRequest(req, true))
+export async function POST(req: Request) { if (!appRequest(req, true))
     return json({ error: 'Invalid request.' }, 403); const user = (await getAuthUser(req, 'customer')); if (!user)
     return json({ error: 'Please sign in.' }, 401); try {
     const body = await boundedJson(req, 10000);

@@ -1,12 +1,12 @@
 import { getAuthUser } from '../../../lib/local/auth';
 import { readCommerceSettings, saveCommerceSettings, listUserAccess, listAiPurchases, updateUserAccess, manageAiPurchase } from '../../../lib/local/commerce';
-import { boundedJson, localRequest } from '../../../lib/local/security';
+import { boundedJson, appRequest } from '../../../lib/local/security';
 export const dynamic = 'force-dynamic';
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
-export async function GET(req: Request) { if (!localRequest(req))
-    return json({ error: 'Local access only.' }, 403); if (!(await getAuthUser(req, 'admin')))
+export async function GET(req: Request) { if (!appRequest(req))
+    return json({ error: 'Request origin is not allowed.' }, 403); if (!(await getAuthUser(req, 'admin')))
     return json({ error: 'Admin sign-in is required.' }, 401); return json({ ...(await readCommerceSettings()), users: (await listUserAccess()), purchases: (await listAiPurchases()) }); }
-export async function POST(req: Request) { if (!localRequest(req, true))
+export async function POST(req: Request) { if (!appRequest(req, true))
     return json({ error: 'Invalid request.' }, 403); if (!(await getAuthUser(req, 'admin')))
     return json({ error: 'Admin sign-in is required.' }, 401); try {
     const body = await boundedJson(req, 30000);

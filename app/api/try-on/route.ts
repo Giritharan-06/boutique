@@ -1,13 +1,13 @@
 import { providerStatus, createJob, friendlyError } from '../../../lib/local/try-on';
 import { readShop } from '../../../lib/local/store';
-import { localRequest, boundedJson } from '../../../lib/local/security';
+import { appRequest, boundedJson } from '../../../lib/local/security';
 import { getAuthUser } from '../../../lib/local/auth';
 import { reservePreview, settlePreview, readPreviewAccess, PreviewLimitError } from '../../../lib/local/commerce';
 import { randomUUID } from 'node:crypto';
 export const dynamic = 'force-dynamic';
-export async function GET(req: Request) { if (!localRequest(req))
-    return Response.json({ error: 'Local access only.' }, { status: 403 }); return Response.json({ connected: (await providerStatus()).connected }, { headers: { 'Cache-Control': 'no-store' } }); }
-export async function POST(req: Request) { if (!localRequest(req, true))
+export async function GET(req: Request) { if (!appRequest(req))
+    return Response.json({ error: 'Request origin is not allowed.' }, { status: 403 }); return Response.json({ connected: (await providerStatus()).connected }, { headers: { 'Cache-Control': 'no-store' } }); }
+export async function POST(req: Request) { if (!appRequest(req, true))
     return Response.json({ error: 'Invalid request.' }, { status: 403 }); let user = (await getAuthUser(req, 'customer')) || (await getAuthUser(req, 'admin')); if (!user)
     return Response.json({ error: 'Please sign in to create a preview.' }, { status: 401 }); const id = randomUUID(); let reserved = false; try {
     const body = await boundedJson(req, 7100000);

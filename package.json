@@ -18,7 +18,8 @@
     "test:crm": "node scripts/verify-crm.mjs",
     "test:commerce": "node scripts/verify-commerce.mjs",
     "test:postgres": "node scripts/verify-postgres.mjs",
-    "test:production": "node scripts/verify-production.mjs"
+    "test:production": "node scripts/verify-production.mjs",
+    "test:hosted-auth": "node scripts/verify-hosted-auth.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

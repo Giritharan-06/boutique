@@ -69,6 +69,7 @@ export function postgresSql(sql:string){
   return converted;
 }
 export async function openDatabase():Promise<Database>{
+  if((process.env.VERCEL==='1'||process.env.APP_ORIGIN)&&!process.env.DATABASE_URL)throw Error('Database connection is not configured. Add DATABASE_URL to the server environment.');
   if(databaseMode()==='sqlite'){
     const previous=sqliteQueue;
     let unlock!:()=>void;
